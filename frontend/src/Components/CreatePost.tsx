@@ -28,6 +28,8 @@ export default function CreatePost({ user }: CreatePostProps) {
   const [success, setSuccess] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [latestPosts, setLatestPosts] = useState<Post[]>([])
+  const [isPublic, setIsPublic] = useState(true)
+  const [IP_Address, setIP_Address] = useState("")
 
   useEffect(() => {
     async function fetchLatest() {
@@ -40,6 +42,19 @@ export default function CreatePost({ user }: CreatePostProps) {
     }
     fetchLatest()
   }, [])
+
+  useEffect(() => {
+    async function CheckIP() {
+      try {
+        const res = await axios.get("https://api.ipify.org?format=json")
+        setIP_Address(res.data.ip)
+      } catch {
+        setIP_Address("IP alınamadı")
+      }
+    }
+    CheckIP()
+  }, [])
+
 
   async function Submit() {
     if (!title || !message) {
@@ -55,6 +70,8 @@ export default function CreatePost({ user }: CreatePostProps) {
         title,
         message,
         password,
+        IP_Address,
+        isPublic: isPublic === true
       }, { withCredentials: true })
 
       if (res.status === 201) {
@@ -73,31 +90,30 @@ export default function CreatePost({ user }: CreatePostProps) {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white flex flex-col md:flex-row p-6">
+    <div className="min-h-screen bg-gray-900 text-white flex flex-col md:flex-row gap-6 p-6">
       
-      {/* Left: Create Post */}
-      <div className="flex-1 md:mr-6 mb-6 md:mb-0">
-        <div className="w-full bg-gray-800 p-6 rounded-xl shadow-lg">
-          <h2 className="text-2xl font-bold mb-4">Create a Post</h2>
-          <p className="text-gray-300 mb-4">
-            Hello, <span className="font-semibold">{user.username}</span>! Share something with the world.
+      <div className="flex-1">
+        <div className="w-full bg-gray-800 p-6 rounded-2xl shadow-xl border border-gray-700">
+          <h2 className="text-3xl font-bold mb-4 text-gray-50">Create a Post</h2>
+          <p className="text-gray-400 mb-6">
+            Hello, <span className="font-semibold text-white">{user.username}</span>! Share something with the world.
           </p>
 
-          {success && <span className="block mb-3 px-4 py-2 bg-green-600 text-white rounded-lg text-sm">{success}</span>}
-          {error && <span className="block mb-3 px-4 py-2 bg-red-600 text-white rounded-lg text-sm">{error}</span>}
+          {success && <span className="block mb-3 px-4 py-2 bg-green-500 text-white rounded-xl font-medium text-sm animate-pulse">{success}</span>}
+          {error && <span className="block mb-3 px-4 py-2 bg-red-500 text-white rounded-xl font-medium text-sm animate-pulse">{error}</span>}
 
           <input
             type="text"
             placeholder="Title"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            className="w-full p-3 mb-3 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 text-white"
+            className="w-full p-3 mb-3 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-white placeholder-gray-400"
           />
           <textarea
             placeholder="Message"
             value={message}
             onChange={(e) => setMessage(e.target.value)}
-            className="w-full p-3 mb-3 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 text-white resize-none"
+            className="w-full p-3 mb-3 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-white placeholder-gray-400 resize-none"
             rows={6}
           ></textarea>
           <input
@@ -105,13 +121,26 @@ export default function CreatePost({ user }: CreatePostProps) {
             placeholder="Password (optional)"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full p-3 mb-4 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 text-white"
+            className="w-full p-3 mb-4 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-white placeholder-gray-400"
           />
+          <div className="flex items-center mb-4">
+        <input
+            type="checkbox"
+            checked={isPublic}
+            onChange={() => setIsPublic(!isPublic)}
+            id="publicPost"
+            className="mr-2"
+        />
+        <label htmlFor="publicPost" className="text-gray-300">
+            Make this post public
+        </label>
+        </div>
+
           <button
             onClick={Submit}
             disabled={isSubmitting}
-            className={`w-full py-2 rounded-lg font-semibold transition-colors ${
-              isSubmitting ? "bg-gray-600 cursor-not-allowed" : "bg-gray-900 hover:bg-gray-700"
+            className={`w-full py-3 rounded-xl font-semibold text-lg transition-colors ${
+              isSubmitting ? "bg-gray-600 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-500"
             }`}
           >
             {isSubmitting ? "Posting..." : "Post"}
@@ -119,17 +148,16 @@ export default function CreatePost({ user }: CreatePostProps) {
         </div>
       </div>
 
-      {/* Right: Latest Sharings */}
-      <div className="w-full md:w-1/3">
-        <h2 className="text-xl font-bold mb-4">Latest Sharings</h2>
-        <div className="space-y-4 max-h-screen overflow-y-auto">
-          {latestPosts.length === 0 && <p className="text-gray-400">No posts yet.</p>}
+      <div className="w-full md:w-1/3 flex flex-col">
+        <h2 className="text-2xl font-bold mb-4 text-gray-50">Latest Sharings</h2>
+        <div className="space-y-4 max-h-[calc(100vh-48px)] overflow-y-auto pr-2">
+          {latestPosts.length === 0 && <p className="text-gray-500">No posts yet.</p>}
           {latestPosts.map((post) => (
-            <div key={post._id} className="bg-gray-800 p-4 rounded-lg shadow">
-              <h3 className="font-semibold">{post.title}</h3>
-              <p className="text-gray-300 text-sm mb-2">{post.message.slice(0, 80)}{post.message.length > 80 && "..."}</p>
+            <div key={post._id} className="bg-gray-800 p-4 rounded-xl shadow-md border border-gray-700 hover:bg-gray-700 transition-colors cursor-pointer">
+              <h3 className="font-semibold text-lg">{post.title}</h3>
+              <p className="text-gray-300 text-sm mb-2">{post.message.slice(0, 100)}{post.message.length > 100 && "..."}</p>
               <p className="text-gray-500 text-xs">
-                by {post.user.username} • {new Date(post.createdAt).toLocaleDateString()}
+                by <span className="font-medium">{post.user.username}</span> • {new Date(post.createdAt).toLocaleDateString()}
               </p>
             </div>
           ))}
