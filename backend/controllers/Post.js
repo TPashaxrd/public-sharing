@@ -56,5 +56,19 @@ const getAllPublicPosts = async (req, res) => {
     }
 };
 
+const getPostBySlug = async(req, res) => {
+    try {
+        const { slug } = req.params;
+        const post = await Post.findOne({ slug })
+        .select("-IP_Address")
+        .populate("user", "username profilePicture")
 
-module.exports = { CreatePost, incrementViews, getAllPublicPosts }
+        if(!post) return res.status(404).json({ message: "Post not found."})
+
+        res.status(200).json({ post })
+    } catch (error) {
+        res.status(500).json({ message: error.message })
+    }
+}
+
+module.exports = { CreatePost, incrementViews, getAllPublicPosts, getPostBySlug }

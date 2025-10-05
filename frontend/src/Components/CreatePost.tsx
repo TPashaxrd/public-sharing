@@ -14,6 +14,7 @@ interface CreatePostProps {
 
 interface Post {
   _id: string
+  slug: string
   title: string
   message: string
   createdAt: string
@@ -93,7 +94,7 @@ export default function CreatePost({ user }: CreatePostProps) {
     <div className="min-h-screen bg-gray-900 text-white flex flex-col md:flex-row gap-6 p-6">
       
       <div className="flex-1">
-        <div className="w-full bg-gray-800 p-6 rounded-2xl shadow-xl border border-gray-700">
+        <div className="w-full mt-14 bg-gray-800 p-6 rounded-2xl shadow-xl border border-gray-700">
           <h2 className="text-3xl font-bold mb-4 text-gray-50">Create a Post</h2>
           <p className="text-gray-400 mb-6">
             Hello, <span className="font-semibold text-white">{user.username}</span>! Share something with the world.
@@ -153,7 +154,7 @@ export default function CreatePost({ user }: CreatePostProps) {
         <div className="space-y-4 max-h-[calc(100vh-48px)] overflow-y-auto pr-2">
           {latestPosts.length === 0 && <p className="text-gray-500">No posts yet.</p>}
           {latestPosts.map((post) => (
-            <div key={post._id} className="bg-gray-800 p-4 rounded-xl shadow-md border border-gray-700 hover:bg-gray-700 transition-colors cursor-pointer">
+            <div key={post._id} onClick={() => window.location.href = `/post/${post?.slug}`} className="bg-gray-800 p-4 rounded-xl shadow-md border border-gray-700 hover:bg-gray-700 transition-colors cursor-pointer">
               <h3 className="font-semibold text-lg">{post.title}</h3>
               <p className="text-gray-300 text-sm mb-2">{post.message.slice(0, 100)}{post.message.length > 100 && "..."}</p>
               <p className="text-gray-500 text-xs">
